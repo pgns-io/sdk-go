@@ -15,10 +15,3 @@ func (c *Client) UpdateMe(ctx context.Context, req UpdateProfileRequest) (User, 
 	err := c.request(ctx, "PATCH", "/v1/me", req, &user)
 	return user, err
 }
-
-// GetStats returns aggregated dashboard statistics.
-func (c *Client) GetStats(ctx context.Context) (DashboardStats, error) {
-	var stats DashboardStats
-	err := c.request(ctx, "GET", "/v1/stats", nil, &stats)
-	return stats, err
-}

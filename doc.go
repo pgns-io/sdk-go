@@ -2,8 +2,7 @@
 //
 // The client supports two authentication modes:
 //   - API key — pass [WithAPIKey] for server-side usage.
-//   - JWT — call [Client.Login] or [Client.Signup], or pass [WithAccessToken].
-//     Expired tokens are refreshed automatically on 401.
+//   - JWT — pass [WithAccessToken]. Expired tokens are refreshed automatically on 401.
 //
 // # Quick start
 //

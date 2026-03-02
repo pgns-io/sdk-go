@@ -24,19 +24,6 @@ func setupServer(t *testing.T) (*httptest.Server, *Client) {
 	mux := http.NewServeMux()
 
 	// Auth
-	mux.HandleFunc("POST /v1/auth/signup", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusCreated)
-		writeJSON(w, AuthTokens{AccessToken: "new_token", TokenType: "Bearer", ExpiresIn: 3600})
-	})
-	mux.HandleFunc("POST /v1/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, AuthTokens{AccessToken: "jwt_token", TokenType: "Bearer", ExpiresIn: 3600})
-	})
-	mux.HandleFunc("POST /v1/auth/magic-link", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, MagicLinkResponse{Message: "check your email"})
-	})
-	mux.HandleFunc("POST /v1/auth/magic-link/verify", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, AuthTokens{AccessToken: "magic_token", TokenType: "Bearer", ExpiresIn: 3600})
-	})
 	mux.HandleFunc("POST /v1/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, AuthTokens{AccessToken: "refreshed", TokenType: "Bearer", ExpiresIn: 3600})
 	})
@@ -175,20 +162,6 @@ func setupServer(t *testing.T) (*httptest.Server, *Client) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	// Billing
-	mux.HandleFunc("POST /v1/billing/checkout", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, CheckoutResponse{CheckoutURL: "https://checkout.stripe.com/session"})
-	})
-	mux.HandleFunc("POST /v1/billing/portal", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, PortalResponse{PortalURL: "https://billing.stripe.com/portal"})
-	})
-	mux.HandleFunc("GET /v1/billing/status", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, BillingStatus{
-			Plan: "pro", SubscriptionStatus: "active", UsageCount: 42,
-			Limits: BillingLimits{PigeonsPerMonth: 10000, MaxRoosts: 50, APIPerMinute: 1000, InboundPerSecond: 100, EmailPerMonth: 500},
-		})
-	})
-
 	// User
 	mux.HandleFunc("GET /v1/me", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, User{ID: "u1", Email: "test@example.com", Name: "Test User", Plan: "free", CreatedAt: "2024-01-01T00:00:00Z", UpdatedAt: "2024-01-01T00:00:00Z"})
@@ -196,10 +169,6 @@ func setupServer(t *testing.T) (*httptest.Server, *Client) {
 	mux.HandleFunc("PATCH /v1/me", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, User{ID: "u1", Email: "test@example.com", Name: "Updated", Plan: "free", CreatedAt: "2024-01-01T00:00:00Z", UpdatedAt: "2024-01-01T00:00:00Z"})
 	})
-	mux.HandleFunc("GET /v1/stats", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, DashboardStats{TotalRoosts: 5, ActiveRoosts: 3, TotalPigeons: 100, PigeonsToday: 10, Delivered: 90, Failed: 5})
-	})
-
 	server := httptest.NewServer(mux)
 	client := NewClient(server.URL, WithAPIKey("pk_live_test"))
 	return server, client
@@ -219,38 +188,6 @@ func TestAuthHeader(t *testing.T) {
 	_, err := client.ListRoosts(context.Background())
 	if err != nil {
 		t.Fatal(err)
-	}
-}
-
-func TestSignup(t *testing.T) {
-	server, _ := setupServer(t)
-	defer server.Close()
-
-	unauthClient := NewClient(server.URL)
-	tokens, err := unauthClient.Signup(context.Background(), SignupRequest{
-		Email: "test@example.com", Password: "secret", TOSAccepted: true,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if tokens.AccessToken != "new_token" {
-		t.Errorf("expected new_token, got %s", tokens.AccessToken)
-	}
-}
-
-func TestLogin(t *testing.T) {
-	server, _ := setupServer(t)
-	defer server.Close()
-
-	client := NewClient(server.URL)
-	tokens, err := client.Login(context.Background(), LoginRequest{
-		Email: "test@example.com", Password: "secret",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if tokens.AccessToken != "jwt_token" {
-		t.Errorf("expected jwt_token, got %s", tokens.AccessToken)
 	}
 }
 
@@ -435,22 +372,6 @@ func TestPreviewTemplate(t *testing.T) {
 	}
 }
 
-func TestBillingStatus(t *testing.T) {
-	server, client := setupServer(t)
-	defer server.Close()
-
-	status, err := client.GetBillingStatus(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if status.Plan != "pro" {
-		t.Errorf("expected pro, got %s", status.Plan)
-	}
-	if status.Limits.PigeonsPerMonth != 10000 {
-		t.Errorf("expected 10000, got %d", status.Limits.PigeonsPerMonth)
-	}
-}
-
 func TestGetMe(t *testing.T) {
 	server, client := setupServer(t)
 	defer server.Close()
@@ -461,22 +382,6 @@ func TestGetMe(t *testing.T) {
 	}
 	if user.Email != "test@example.com" {
 		t.Errorf("expected test@example.com, got %s", user.Email)
-	}
-}
-
-func TestGetStats(t *testing.T) {
-	server, client := setupServer(t)
-	defer server.Close()
-
-	stats, err := client.GetStats(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if stats.TotalRoosts != 5 {
-		t.Errorf("expected 5, got %d", stats.TotalRoosts)
-	}
-	if stats.Delivered != 90 {
-		t.Errorf("expected 90, got %d", stats.Delivered)
 	}
 }
 

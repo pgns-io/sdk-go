@@ -11,48 +11,18 @@ type AuthTokens struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-// SignupRequest is the body for POST /v1/auth/signup.
-type SignupRequest struct {
-	Email       string `json:"email"`
-	Password    string `json:"password"`
-	Name        string `json:"name,omitempty"`
-	TOSAccepted bool   `json:"tos_accepted"`
-}
-
-// LoginRequest is the body for POST /v1/auth/login.
-type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-// MagicLinkRequest is the body for POST /v1/auth/magic-link.
-type MagicLinkRequest struct {
-	Email string `json:"email"`
-}
-
-// MagicLinkVerifyRequest is the body for POST /v1/auth/magic-link/verify.
-type MagicLinkVerifyRequest struct {
-	Token string `json:"token"`
-}
-
-// MagicLinkResponse is returned by POST /v1/auth/magic-link.
-type MagicLinkResponse struct {
-	Message string `json:"message"`
-}
-
 // ---------------------------------------------------------------------------
 // Domain models
 // ---------------------------------------------------------------------------
 
 // User represents an authenticated user account.
 type User struct {
-	ID            string  `json:"id"`
-	Email         string  `json:"email"`
-	Name          string  `json:"name"`
-	Plan          string  `json:"plan"`
-	TOSAcceptedAt *string `json:"tos_accepted_at"`
-	CreatedAt     string  `json:"created_at"`
-	UpdatedAt     string  `json:"updated_at"`
+	ID        string `json:"id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Plan      string `json:"plan"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 // Roost is a webhook endpoint that captures incoming requests.
@@ -77,7 +47,6 @@ type Pigeon struct {
 	BodyJSON       any            `json:"body_json"`
 	BodyRaw        []int          `json:"body_raw"`
 	RequestQuery   map[string]any `json:"request_query"`
-	Filtered       bool           `json:"filtered"`
 	ReplayedFrom   *string        `json:"replayed_from"`
 	DeliveryStatus string         `json:"delivery_status"`
 	ReceivedAt     string         `json:"received_at"`
@@ -203,16 +172,6 @@ type ReplayResponse struct {
 	DeliveryAttempts int    `json:"delivery_attempts"`
 }
 
-// DashboardStats contains aggregated statistics.
-type DashboardStats struct {
-	TotalRoosts  int `json:"total_roosts"`
-	ActiveRoosts int `json:"active_roosts"`
-	TotalPigeons int `json:"total_pigeons"`
-	PigeonsToday int `json:"pigeons_today"`
-	Delivered    int `json:"delivered"`
-	Failed       int `json:"failed"`
-}
-
 // ---------------------------------------------------------------------------
 // Pagination
 // ---------------------------------------------------------------------------
@@ -268,49 +227,4 @@ type PreviewTemplateRequest struct {
 // PreviewTemplateResponse is returned by POST /v1/templates/preview.
 type PreviewTemplateResponse struct {
 	Rendered string `json:"rendered"`
-}
-
-// ---------------------------------------------------------------------------
-// Billing
-// ---------------------------------------------------------------------------
-
-// BillingLimits describes the rate/usage limits for a plan.
-type BillingLimits struct {
-	PigeonsPerMonth  int `json:"pigeons_per_month"`
-	MaxRoosts        int `json:"max_roosts"`
-	APIPerMinute     int `json:"api_per_minute"`
-	InboundPerSecond int `json:"inbound_per_second"`
-	EmailPerMonth    int `json:"email_per_month"`
-}
-
-// BillingStatus describes the current billing state.
-type BillingStatus struct {
-	Plan               string        `json:"plan"`
-	SubscriptionStatus string        `json:"subscription_status"`
-	BillingPeriodStart *string       `json:"billing_period_start"`
-	BillingPeriodEnd   *string       `json:"billing_period_end"`
-	UsageCount         int           `json:"usage_count"`
-	Limits             BillingLimits `json:"limits"`
-}
-
-// CheckoutRequest is the body for POST /v1/billing/checkout.
-type CheckoutRequest struct {
-	PriceID    string `json:"price_id"`
-	SuccessURL string `json:"success_url"`
-	CancelURL  string `json:"cancel_url"`
-}
-
-// CheckoutResponse is returned by POST /v1/billing/checkout.
-type CheckoutResponse struct {
-	CheckoutURL string `json:"checkout_url"`
-}
-
-// PortalRequest is the body for POST /v1/billing/portal.
-type PortalRequest struct {
-	ReturnURL string `json:"return_url"`
-}
-
-// PortalResponse is returned by POST /v1/billing/portal.
-type PortalResponse struct {
-	PortalURL string `json:"portal_url"`
 }
