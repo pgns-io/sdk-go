@@ -33,6 +33,13 @@ func (c *Client) PauseDestination(ctx context.Context, destinationID string, isP
 	return resp, err
 }
 
+// UpdateDestination updates a destination's name or configuration.
+func (c *Client) UpdateDestination(ctx context.Context, destinationID string, req UpdateDestination) (Destination, error) {
+	var dest Destination
+	err := c.request(ctx, "PATCH", "/v1/destinations/"+url.PathEscape(destinationID), req, &dest)
+	return dest, err
+}
+
 // DeleteDestination permanently deletes a destination.
 func (c *Client) DeleteDestination(ctx context.Context, destinationID string) error {
 	return c.request(ctx, "DELETE", "/v1/destinations/"+url.PathEscape(destinationID), nil, nil)

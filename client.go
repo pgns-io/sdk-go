@@ -201,9 +201,10 @@ func handleResponse(resp *http.Response, result any) error {
 	if resp.StatusCode >= 400 {
 		var apiErr struct {
 			Error string `json:"error"`
+			Code  string `json:"code"`
 		}
 		if json.Unmarshal(respBody, &apiErr) == nil && apiErr.Error != "" {
-			return &PigeonsError{Message: apiErr.Error, StatusCode: resp.StatusCode}
+			return &PigeonsError{Message: apiErr.Error, StatusCode: resp.StatusCode, Code: apiErr.Code}
 		}
 		return &PigeonsError{Message: resp.Status, StatusCode: resp.StatusCode}
 	}

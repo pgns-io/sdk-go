@@ -9,6 +9,7 @@ import (
 type PigeonsError struct {
 	Message    string
 	StatusCode int
+	Code       string
 }
 
 func (e *PigeonsError) Error() string {

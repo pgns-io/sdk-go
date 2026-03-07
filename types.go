@@ -17,12 +17,15 @@ type AuthTokens struct {
 
 // User represents an authenticated user account.
 type User struct {
-	ID        string `json:"id"`
-	Email     string `json:"email"`
-	Name      string `json:"name"`
-	Plan      string `json:"plan"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	ID            string  `json:"id"`
+	Email         string  `json:"email"`
+	Name          string  `json:"name"`
+	Plan          string  `json:"plan"`
+	DataRegion    string  `json:"data_region"`
+	Country       *string `json:"country"`
+	TosAcceptedAt *string `json:"tos_accepted_at"`
+	CreatedAt     string  `json:"created_at"`
+	UpdatedAt     string  `json:"updated_at"`
 }
 
 // Roost is a webhook endpoint that captures incoming requests.
@@ -31,6 +34,7 @@ type Roost struct {
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
 	Secret      *string `json:"secret"`
+	SourceType  *string `json:"source_type"`
 	IsActive    bool    `json:"is_active"`
 	CreatedAt   string  `json:"created_at"`
 	UpdatedAt   string  `json:"updated_at"`
@@ -56,6 +60,7 @@ type Pigeon struct {
 type Destination struct {
 	ID               string         `json:"id"`
 	RoostID          string         `json:"roost_id"`
+	Name             string         `json:"name"`
 	DestinationType  string         `json:"destination_type"`
 	Config           map[string]any `json:"config"`
 	FilterExpression string         `json:"filter_expression"`
@@ -64,22 +69,24 @@ type Destination struct {
 	RetryDelayMs     int            `json:"retry_delay_ms"`
 	RetryMultiplier  float64        `json:"retry_multiplier"`
 	IsPaused         bool           `json:"is_paused"`
+	IsVerified       bool           `json:"is_verified"`
 	CreatedAt        string         `json:"created_at"`
 	UpdatedAt        string         `json:"updated_at"`
 }
 
 // DeliveryAttempt is a single attempt to deliver a pigeon to a destination.
 type DeliveryAttempt struct {
-	ID             string  `json:"id"`
-	PigeonID       string  `json:"pigeon_id"`
-	DestinationID  string  `json:"destination_id"`
-	Status         string  `json:"status"`
-	AttemptNumber  int     `json:"attempt_number"`
-	ResponseStatus *int    `json:"response_status"`
-	ResponseBody   *string `json:"response_body"`
-	ErrorMessage   *string `json:"error_message"`
-	AttemptedAt    string  `json:"attempted_at"`
-	NextRetryAt    *string `json:"next_retry_at"`
+	ID              string            `json:"id"`
+	PigeonID        string            `json:"pigeon_id"`
+	DestinationID   string            `json:"destination_id"`
+	Status          string            `json:"status"`
+	AttemptNumber   int               `json:"attempt_number"`
+	ResponseStatus  *int              `json:"response_status"`
+	ResponseBody    *string           `json:"response_body"`
+	ResponseHeaders map[string]string `json:"response_headers,omitempty"`
+	ErrorMessage    *string           `json:"error_message"`
+	AttemptedAt     string            `json:"attempted_at"`
+	NextRetryAt     *string           `json:"next_retry_at"`
 }
 
 // ---------------------------------------------------------------------------
@@ -114,6 +121,7 @@ type CreateRoost struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description,omitempty"`
 	Secret      *string `json:"secret,omitempty"`
+	SourceType  *string `json:"source_type,omitempty"`
 }
 
 // UpdateRoost is the body for PATCH /v1/roosts/:id.
@@ -121,18 +129,30 @@ type UpdateRoost struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Secret      *string `json:"secret,omitempty"`
+	SourceType  *string `json:"source_type,omitempty"`
 	IsActive    *bool   `json:"is_active,omitempty"`
 }
 
 // CreateDestination is the body for POST /v1/roosts/:id/destinations.
 type CreateDestination struct {
 	DestinationType  string         `json:"destination_type"`
+	Name             *string        `json:"name,omitempty"`
 	Config           map[string]any `json:"config,omitempty"`
 	FilterExpression *string        `json:"filter_expression,omitempty"`
 	Template         *string        `json:"template,omitempty"`
 	RetryMax         *int           `json:"retry_max,omitempty"`
 	RetryDelayMs     *int           `json:"retry_delay_ms,omitempty"`
 	RetryMultiplier  *float64       `json:"retry_multiplier,omitempty"`
+}
+
+// UpdateDestination is the body for PATCH /v1/destinations/:id.
+type UpdateDestination struct {
+	Name             *string        `json:"name,omitempty"`
+	Config           map[string]any `json:"config,omitempty"`
+	FilterExpression *string        `json:"filter_expression,omitempty"`
+	Template         *string        `json:"template,omitempty"`
+	TransformType    *string        `json:"transform_type,omitempty"`
+	TransformCode    *string        `json:"transform_code,omitempty"`
 }
 
 // PauseInput is the body for PATCH /v1/destinations/:id/pause.

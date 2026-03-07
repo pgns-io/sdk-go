@@ -1,6 +1,6 @@
 module github.com/pgns-io/sdk-go
 
-go 1.25
+go 1.26
 
 // Contains internal service types (billing, dashboard, app auth).
 // Use v0.2.0+ instead.
