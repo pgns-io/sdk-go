@@ -1,3 +1,7 @@
+// Copyright (c) 2026 PGNS LLC
+//
+// SPDX-License-Identifier: MIT
+
 package sdk
 
 // ---------------------------------------------------------------------------
@@ -24,6 +28,7 @@ type User struct {
 	DataRegion    string  `json:"data_region"`
 	Country       *string `json:"country"`
 	TosAcceptedAt *string `json:"tos_accepted_at"`
+	MfaEnabled    bool    `json:"mfa_enabled"`
 	CreatedAt     string  `json:"created_at"`
 	UpdatedAt     string  `json:"updated_at"`
 }
@@ -35,6 +40,7 @@ type Roost struct {
 	Description string  `json:"description"`
 	Secret      *string `json:"secret"`
 	SourceType  *string `json:"source_type"`
+	Schema      any     `json:"schema"`
 	IsActive    bool    `json:"is_active"`
 	CreatedAt   string  `json:"created_at"`
 	UpdatedAt   string  `json:"updated_at"`
@@ -54,6 +60,7 @@ type Pigeon struct {
 	ReplayedFrom   *string        `json:"replayed_from"`
 	DeliveryStatus string         `json:"delivery_status"`
 	ReceivedAt     string         `json:"received_at"`
+	CorrelationID  *string        `json:"correlation_id"`
 }
 
 // Destination is a forwarding target attached to a roost.
@@ -84,6 +91,8 @@ type DeliveryAttempt struct {
 	ResponseStatus  *int              `json:"response_status"`
 	ResponseBody    *string           `json:"response_body"`
 	ResponseHeaders map[string]string `json:"response_headers,omitempty"`
+	RequestHeaders  map[string]string `json:"request_headers,omitempty"`
+	RequestBody     *string           `json:"request_body,omitempty"`
 	ErrorMessage    *string           `json:"error_message"`
 	AttemptedAt     string            `json:"attempted_at"`
 	NextRetryAt     *string           `json:"next_retry_at"`
@@ -122,6 +131,7 @@ type CreateRoost struct {
 	Description *string `json:"description,omitempty"`
 	Secret      *string `json:"secret,omitempty"`
 	SourceType  *string `json:"source_type,omitempty"`
+	Schema      any     `json:"schema,omitempty"`
 }
 
 // UpdateRoost is the body for PATCH /v1/roosts/:id.
@@ -130,6 +140,7 @@ type UpdateRoost struct {
 	Description *string `json:"description,omitempty"`
 	Secret      *string `json:"secret,omitempty"`
 	SourceType  *string `json:"source_type,omitempty"`
+	Schema      any     `json:"schema,omitempty"`
 	IsActive    *bool   `json:"is_active,omitempty"`
 }
 

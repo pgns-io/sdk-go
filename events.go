@@ -1,3 +1,7 @@
+// Copyright (c) 2026 PGNS LLC
+//
+// SPDX-License-Identifier: MIT
+
 package sdk
 
 import (
@@ -32,7 +36,8 @@ func WithErrorHandler(fn func(error)) EventOption {
 
 // ListenEvents connects to the SSE event stream and calls onEvent for each
 // event received. It automatically reconnects on failure with a 3-second
-// delay. The function blocks until ctx is cancelled.
+// delay. On reconnect, the Last-Event-ID header is sent so the server can
+// replay missed events. The function blocks until ctx is cancelled.
 func (c *Client) ListenEvents(ctx context.Context, onEvent func(data string), opts ...EventOption) error {
 	var cfg eventConfig
 	for _, opt := range opts {
@@ -44,12 +49,17 @@ func (c *Client) ListenEvents(ctx context.Context, onEvent func(data string), op
 		eventURL += "?roost_id=" + url.QueryEscape(cfg.roostID)
 	}
 
+	var lastEventID string
+
 	for {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
-		err := c.streamEvents(ctx, eventURL, onEvent)
+		id, err := c.streamEvents(ctx, eventURL, lastEventID, onEvent)
+		if id != "" {
+			lastEventID = id
+		}
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
@@ -65,10 +75,10 @@ func (c *Client) ListenEvents(ctx context.Context, onEvent func(data string), op
 	}
 }
 
-func (c *Client) streamEvents(ctx context.Context, eventURL string, onEvent func(string)) error {
+func (c *Client) streamEvents(ctx context.Context, eventURL, lastEventID string, onEvent func(string)) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, eventURL, nil)
 	if err != nil {
-		return fmt.Errorf("pgns: create SSE request: %w", err)
+		return lastEventID, fmt.Errorf("pgns: create SSE request: %w", err)
 	}
 
 	req.Header.Set("Accept", "text/event-stream")
@@ -76,15 +86,18 @@ func (c *Client) streamEvents(ctx context.Context, eventURL string, onEvent func
 	if auth != "" {
 		req.Header.Set("Authorization", auth)
 	}
+	if lastEventID != "" {
+		req.Header.Set("Last-Event-ID", lastEventID)
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("pgns: SSE connect: %w", err)
+		return lastEventID, fmt.Errorf("pgns: SSE connect: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return &PigeonsError{
+		return lastEventID, &PigeonsError{
 			Message:    fmt.Sprintf("SSE connect failed: %s", resp.Status),
 			StatusCode: resp.StatusCode,
 		}
@@ -93,10 +106,12 @@ func (c *Client) streamEvents(ctx context.Context, eventURL string, onEvent func
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "data:") {
+		if strings.HasPrefix(line, "id:") {
+			lastEventID = strings.TrimSpace(line[3:])
+		} else if strings.HasPrefix(line, "data:") {
 			data := strings.TrimSpace(line[5:])
 			onEvent(data)
 		}
 	}
-	return scanner.Err()
+	return lastEventID, scanner.Err()
 }

@@ -1,3 +1,7 @@
+// Copyright (c) 2026 PGNS LLC
+//
+// SPDX-License-Identifier: MIT
+
 package sdk
 
 import "context"

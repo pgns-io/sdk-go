@@ -1,3 +1,7 @@
+// Copyright (c) 2026 PGNS LLC
+//
+// SPDX-License-Identifier: MIT
+
 // Package sdk provides a Go client for the pgns webhook relay API.
 //
 // The client supports two authentication modes:
